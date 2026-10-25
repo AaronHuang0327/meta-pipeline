@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meta 生產線手冊</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 版面概念：奶油黃的陽光地面，九張工作站卡片沿著一條輸送帶排下去；每張卡可以蓋章。 */
+:root{
+  --bg:#FFD84A;        /* 陽光黃：固定單一主題，不隨深色模式變泥 */
+  --bg-deep:#FFC226;   /* 更飽和的黃，當作輸送帶與強調帶 */
+  --card:#FFFFFF;      /* 純白卡片，跟黃底拉開 */
+  --fg:#2B2418;        /* 暖炭色文字 */
+  --muted:#7A6B45;     /* 次要文字 */
+  --accent:#FF6B3D;    /* 橘紅：蓋章、動作 */
+  --accent-2:#3BA6A0;  /* 湖水綠：AI 自動化 */
+  --ok:#3E9B5B;        /* 通過 */
+  --line:#F0D060;      /* 細線 */
+  --code:#FFF3C4;
+  color-scheme:light;
+  --display:"Fredoka","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:860px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.5rem;font-weight:600}
+h3{font-size:1.05rem;font-weight:600;font-family:var(--body)}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:.1em .4em;border-radius:6px}
+pre{font-family:var(--mono);font-size:.82rem;background:var(--code);padding:12px 14px;border-radius:12px;overflow-x:auto;margin:0;line-height:1.55}
+pre code{background:none;padding:0}
+.eyebrow{font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--muted);font-weight:600}
+
+/* 頁首 */
+header{padding-block:56px 28px;display:grid;gap:14px}
+.sun{width:64px;height:64px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 10px var(--bg-deep),0 0 0 20px color-mix(in srgb,var(--bg-deep) 40%,transparent);animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lead{font-size:1.1rem;max-width:34em;color:var(--fg)}
+.lead b{color:var(--accent)}
+
+/* 輸送帶 */
+.belt{background:var(--bg-deep);border-radius:22px;padding:18px 16px 14px;margin-block:10px 40px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 8px 30px -18px rgba(60,40,0,.5)}
+.belt-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.belt-row::-webkit-scrollbar{display:none}
+.stop{flex:0 0 auto;display:grid;place-items:center;gap:3px;text-decoration:none;color:var(--fg);min-width:64px}
+.stop .n{font-family:var(--display);font-weight:700;width:38px;height:38px;border-radius:50%;background:var(--card);display:grid;place-items:center;border:2px solid var(--line);transition:transform .15s}
+.stop:hover .n,.stop:focus-visible .n{transform:translateY(-3px)}
+.stop.done .n{background:var(--ok);color:#fff;border-color:var(--ok)}
+.stop .t{font-size:.68rem;white-space:nowrap;color:var(--muted)}
+.chev{flex:0 0 auto;color:var(--muted);font-size:.8rem}
+.belt-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:8px}
+.belt-meta b{color:var(--fg);font-family:var(--display)}
+.reset{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:3px 10px;font-size:.75rem;cursor:pointer;font-family:var(--body)}
+
+/* 哲學區 */
+.intro{display:grid;gap:14px;margin-bottom:44px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.rule{background:var(--card);border-radius:16px;padding:16px 18px;display:grid;gap:4px;border-top:4px solid var(--accent)}
+.rule:nth-child(2){border-top-color:var(--accent-2)}
+.rule:nth-child(3){border-top-color:var(--ok)}
+.rule h3{font-size:1rem}
+.rule p{font-size:.92rem;color:var(--muted)}
+
+/* 工作站卡 */
+.station{background:var(--card);border-radius:22px;padding:26px clamp(18px,4vw,32px) 24px;margin-bottom:28px;display:grid;gap:20px;position:relative;scroll-margin-top:140px;border:1px solid var(--line)}
+.station.done{border-color:var(--ok)}
+.st-head{display:flex;gap:16px;align-items:flex-start}
+.st-num{font-family:var(--display);font-size:2.6rem;font-weight:700;color:var(--accent);line-height:1;min-width:2.2ch}
+.st-title{display:grid;gap:2px;min-width:0}
+.st-title .one{color:var(--muted);font-size:.95rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+.col{display:grid;gap:6px;min-width:0;padding:14px 16px;border-radius:14px;background:var(--code)}
+.col.ai{background:color-mix(in srgb,var(--accent-2) 14%,var(--card))}
+.col.you{background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+.col .eyebrow{color:inherit}
+.col ul{margin:0;padding-left:1.2em;font-size:.93rem;display:grid;gap:3px}
+.why{font-size:.97rem}
+.files{display:flex;flex-wrap:wrap;gap:6px}
+.files code{background:var(--bg-deep);border-radius:999px;padding:.15em .7em}
+.traps{display:grid;gap:4px;font-size:.92rem;padding-left:1.2em;margin:0}
+.traps li::marker{content:"⚡ "}
+.quiz{border:1px dashed var(--line);border-radius:14px;padding:12px 16px;font-size:.93rem}
+.quiz summary{cursor:pointer;font-weight:700;list-style:none}
+.quiz summary::before{content:"考考你 ▸ ";color:var(--accent-2);font-family:var(--display)}
+.quiz[open] summary::before{content:"考考你 ▾ "}
+.quiz p{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.motto{font-family:var(--display);font-size:1.05rem;color:var(--accent);border-left:4px solid var(--accent);padding-left:12px}
+
+/* 檢查清單與蓋章 */
+.check{display:grid;gap:6px}
+.check label{display:flex;gap:10px;align-items:flex-start;font-size:.93rem;cursor:pointer}
+.check input{margin-top:.35em;accent-color:var(--ok);width:16px;height:16px;flex:none}
+.gate{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line)}
+.stamp-btn{font-family:var(--display);font-weight:600;font-size:1rem;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:10px 22px;cursor:pointer;box-shadow:0 6px 0 color-mix(in srgb,var(--accent) 70%,black);transition:transform .08s,box-shadow .08s}
+.stamp-btn:active{transform:translateY(4px);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 70%,black)}
+.stamp-btn:disabled{opacity:.5;cursor:not-allowed}
+.stamp-btn:focus-visible,.reset:focus-visible,.stop:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
+.gate-hint{font-size:.85rem;color:var(--muted)}
+.gate-cmd{font-family:var(--mono);font-size:.78rem;color:var(--muted);flex-basis:100%}
+.stamp{position:absolute;right:18px;top:18px;transform:rotate(-12deg);border:3px solid var(--ok);color:var(--ok);font-family:var(--display);font-weight:700;letter-spacing:.08em;padding:4px 10px;border-radius:8px;font-size:.9rem;opacity:.9;animation:slam .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes slam{from{transform:rotate(-12deg) scale(2.4);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.9}}
+.stamp-line{font-size:.85rem;color:var(--ok);font-weight:500}
+
+/* 完工橫幅 */
+.finale{display:none;background:var(--accent);color:#fff;border-radius:22px;padding:28px;text-align:center;font-family:var(--display);font-size:1.4rem;margin-bottom:28px}
+.finale.show{display:block;animation:slam .4s cubic-bezier(.2,1.6,.4,1)}
+
+footer{color:var(--muted);font-size:.88rem;display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="sun" aria-hidden="true"></div>
+  <p class="eyebrow">Systematic Review &amp; Meta-Analysis · 九站閘門生產線</p>
+  <h1>Meta 生產線手冊</h1>
+  <p class="lead">把一篇統合分析拆成九個工作站。<b>AI 做苦工，人做判斷</b>；每站做完要蓋章，沒蓋章下一站不開工。照著走一遍，你就學會了整個 SR/MA；下一個題目，再走一遍就好。</p>
+</header>
+
+<nav class="belt" aria-label="工作站輸送帶">
+  <div class="belt-row" id="belt"></div>
+  <div class="belt-meta">
+    <span>已蓋章 <b id="count">0</b> / 9 · 蓋章紀錄只存在你這台瀏覽器，正式紀錄在 <code>manifest.json</code></span>
+    <button class="reset" id="reset" type="button">重設所有章</button>
+  </div>
+</nav>
+
+<section class="intro">
+  <h2>先讀這個：閘門的三條規矩</h2>
+  <div class="rules">
+    <div class="rule"><h3>不跳站</h3><p>第 N 站的章，要第 N−1 站先蓋好。<code>gate.py</code> 會擋，不是建議，是強制。</p></div>
+    <div class="rule"><h3>每個判斷附出處</h3><p>篩選附理由、擷取附頁碼、評讀附句子。沒出處的數字不准進檔案——未來的審稿人跟未來的你都會感謝。</p></div>
+    <div class="rule"><h3>上游改了，下游重跑</h3><p><code>gate.py reopen</code> 會把那一站之後全部打回。簽核後偷改檔案，<code>status</code> 會標 ⚠ 要求重簽。這不是懲罰，是誠實。</p></div>
+    <div class="rule"><h3>AI 不是審查者</h3><p>篩選與資格判定由第一、第二作者<b>各自看完每一筆</b>；LLM 只做預篩排序與品管旗標。投稿時 Methods 才寫得出來。</p></div>
+  </div>
+  <div class="rules">
+    <div class="rule" style="border-top-color:var(--accent-2)"><h3>每一步自動留痕</h3><p>每支腳本跑完都把「誰、何時、哪支腳本、參數、產出檔與 sha256、幾列」寫進 <code>manifest.json</code>。<code>gate.py events 題目</code> 就是你的審計軌跡，可當補充資料附在稿件後。手動做的事用 <code>gate.py log</code> 補記。</p></div>
+    <div class="rule" style="border-top-color:var(--accent)"><h3>一篇接一篇：看板</h3><p><code>gate.py board</code> 列出所有題目與各自的下一站。跟 Claude 說「繼續」，它會挑第一個輪到它做的站做完、停下；全部在等人簽核時，它列出每題在等誰。多條線同時走，你只需要蓋章。</p></div>
+  </div>
+  <p class="why">整條線的實體是 <code>meta-pipeline/</code> 資料夾：<code>stations/</code> 放九站的模板與腳本，<code>projects/&lt;題目&gt;/</code> 是每個題目自己的工作區，<code>manifest.json</code> 記錄誰、何時、為什麼蓋了章。開新題目：<code>python gate.py new 題目名</code>。</p>
+</section>
+
+<div id="stations"></div>
+
+<div class="finale" id="finale">九站全部通過 🌞<br><span style="font-size:1rem;font-weight:400">投稿去吧。然後把下一個題目丟進同一條線。</span></div>
+
+<footer>
+  <p><strong>跟 Claude 一起跑：</strong>把 <code>meta-pipeline/</code> 整個交給 Claude，說「依 SKILL.md 從第 N 站開始」。SKILL.md 規定它每站結束必須停下來等你蓋章。</p>
+  <p><strong>投稿時要寫的兩句話：</strong>「Two reviewers independently screened all records; disagreements were resolved by a third reviewer. A large language model (Claude, Anthropic) was used to pre-screen and prioritise records and to flag potential false exclusions for re-examination; it did not replace either human reviewer.」</p>
+  <p><strong>留痕在哪：</strong>每個題目的 <code>manifest.json</code>。<code>gate.py events 題目</code> 列出全部事件；<code>gate.py board</code> 看所有題目走到哪。</p>
+  <p>方法學依據：Cochrane Handbook 6.x、PRISMA 2020、RoB 2 / ROBINS-I、GRADE。</p>
+</footer>
+</div>
+
+<script>
+const STATIONS = [
+{n:"01",name:"題目與計畫書",one:"把模糊念頭變成別人能照做的計畫書",
+ why:"SR/MA 的靈魂不在統計，在這一站。問題定得好，後面八站是體力活；定得差，八站都是白工。先登記 PROSPERO，就沒有「事後改 outcome」的嫌疑。",
+ ai:["從一句臨床問題展開 PICO 與納排條件","用 PubMed 粗搜一次，估文獻量","產出 PRISMA-P 格式的 protocol 草稿"],
+ you:["題目值不值得做、大小合不合適","主要 outcome 只能一個，效應量型態先定（MD / SMD / RR / OR）","統計計畫（模型、亞組、敏感度）現在就寫死"],
+ files:["pico.md","protocol.md"],cmd:"python gate.py approve <題目> 01 --by 你 --note \"主要 outcome 用 MD\"",
+ traps:["outcome 寫成「功能」——哪個量表？幾個月的時間點？","介入與對照定義重疊","計畫書沒寫亞組，分析時「臨時想到」"],
+ check:["PICO 每項都有明確邊界，沒有「等等」「相關」","主要 outcome 一個，效應量型態已定","納排條件能讓兩個不同的人篩出同一批文獻","可行性探路顯示文獻量在 3–100 篇量級"],
+ q:"為什麼 outcome 通常不放進檢索語法？",a:"因為摘要常常不寫 outcome，放進去會漏掉真正相關的研究。檢索只用 P 和 I（有時加 C），outcome 留給篩選階段判斷。",
+ motto:"問題定得好，後面都是體力活。"},
+{n:"02",name:"檢索策略",one:"把 PICO 翻譯成資料庫的語言，一網打盡",
+ why:"原則是寧可多抓、不要漏抓：多抓的下一站篩掉就好，漏抓的永遠找不回來。語法會原封不動放進稿件附錄，審稿人會逐字看。",
+ ai:["每個概念列同義詞 + MeSH / Emtree","翻譯成 PubMed、Embase、CENTRAL 三套語法","跑 pubmed_search.py 匯出 CSV"],
+ you:["逐行看語法：MeSH 真的存在？截斷位置對嗎？","拿 3–5 篇種子文獻驗證語法抓得到","Embase / Scopus 到圖書館介面跑，匯出成同格式 CSV"],
+ files:["search_strategy.md","records_pubmed.csv","records_embase.csv"],cmd:"python pubmed_search.py --query-file query.txt --out records_pubmed.csv",
+ traps:["同義詞用 AND 連接（應該是 OR）","截斷打太前面：exten* 會抓到 extent、external","只搜 PubMed——審稿人第一個問 Embase 在哪","忘了記錄檢索日期與筆數"],
+ check:["每個概念至少 3 個同義詞，含單複數與截斷","種子文獻全部被抓到","三個資料庫都有日期與筆數","沒把 outcome 當檢索條件"],
+ q:"兩個概念各有五個同義詞，語法裡應該出現幾個 AND？",a:"一個。同一概念內全部用 OR 包起來，概念之間才用 AND。",
+ motto:"多抓可以篩，漏抓找不回。"},
+{n:"03",name:"去重與初篩",one:"八百筆變幾十筆，兩位作者各自獨立看完每一筆",
+ why:"去重先用 DOI，再用正規化標題 + 年份。篩選是方法學硬規定：第一、第二作者各自獨立判完全部紀錄，期間不互看；不一致由通訊作者裁決。LLM 不代替任何一位：它先跑一輪預篩讓人先看最可能相關的，再當第三雙眼睛抓漏。",
+ ai:["dedup.py 合併去重（DOI 回填），另存被判重複的清單","預篩一輪產出 screen_LLM.csv，用來排序","adjudicate.py 比對 A/B，兩人都排除但 LLM 高信心納入的標 qa_flag"],
+ you:["第一作者填 screen_A.csv、第二作者填 screen_B.csv，各自看完每一筆（缺一筆腳本就擋）","通訊作者只裁決 A ≠ B 的列","qa_flag 的列兩人各回頭看一眼；記下 PRISMA 四個數字"],
+ files:["records_dedup.csv","screen_LLM.csv","screen_A.csv","screen_B.csv","screening_decisions.csv"],cmd:"python dedup.py --out records_dedup.csv --by 你\npython adjudicate.py screen_A.csv screen_B.csv --llm screen_LLM.csv --out screening_decisions.csv --by 你",
+ traps:["讓 B 看到 A 的結果，或兩人一起篩——那不是獨立","用 LLM 當其中一位審查者——投稿時 Methods 寫不出來","這階段就要求摘要要有 outcome 數據——誤殺","只信 kappa：kappa 高只代表兩個審查者錯得一樣"],
+ check:["去重後筆數比合併前少 20–50%，抽查過重複清單","screen_A 與 screen_B 都涵蓋全部 id","所有 needs_third 的列都有第三人裁決與理由","所有 qa_flag 的列被回頭看過","四個 PRISMA 數字已記錄"],
+ q:"兩位作者都把某篇排除，LLM 卻高信心說該納入。最後誰說了算？",a:"兩位作者。LLM 的意見只是一個 qa_flag，請兩人各自回頭再看一眼；改變決定要寫理由，不改也可以。審查者永遠是人。",
+ motto:"寧可多留，不要誤殺；審查者永遠是人。"},
+{n:"04",name:"全文與資格",one:"一篇一篇讀全文，確定真的符合",
+ why:"第一次碰到「拿不到全文」的現實。排除理由必須從固定清單選，因為 PRISMA 流程圖要分類統計；一篇若符合多個理由，只記第一個碰到的（依 P→I→C→O→S 順序）。",
+ ai:["PMC 開放全文自動抓","付費者列清單（作者、年份、DOI）給你取得","逐篇判定資格並引用頁碼"],
+ you:["獨立判一次，與 AI 比對","付費全文從圖書館、ResearchGate 或寫信給作者取得","檢查有沒有同一批病人發了兩篇"],
+ files:["eligibility.csv","fulltext/"],cmd:"# 全文 PDF 命名：<id>_<第一作者>_<年份>.pdf 放進 fulltext/",
+ traps:["一篇記兩個排除理由，流程圖數字對不起來","no_fulltext 太多，又沒努力聯絡作者","忘了從納入文獻的參考文獻再找（snowballing）"],
+ check:["每篇 include 都能對應 PICO 四項","每篇 exclude 都有固定清單理由 + 頁碼","no_fulltext ≤ 5% 且已聯絡作者","記下全文篇數、各理由排除數、最終納入數"],
+ q:"一篇文章既是錯族群又是錯設計，排除理由寫什麼？",a:"只寫 wrong_population。依 P→I→C→O→S 順序記第一個碰到的，否則流程圖的加總會對不上。",
+ motto:"一篇一個理由，流程圖才加得起來。"},
+{n:"05",name:"資料擷取",one:"把要的數字抄出來，每一格都附出處",
+ why:"第 7 站的統計全靠這張表；抄錯一個 SD，森林圖就是錯的。設計上每個數值旁邊都有 source 欄，你核對時直接翻那一頁對一眼，不用重讀全文。",
+ ai:["依模板逐篇擷取研究特徵、介入細節、outcome 數值","每格附頁碼與原文句（≤25 字）","標記需要換算的（SE、CI、median/IQR、圖讀）"],
+ you:["重點核對 outcome 數值與 SD","請學弟妹再獨立核對一次 outcome——這就是雙人擷取","決定多臂試驗怎麼處理（protocol 應已寫）"],
+ files:["extraction.csv","extraction_outcomes.csv","extraction_log.md"],cmd:"# 用 extraction_prompt.md 的鐵律：沒有出處的數字不准寫，找不到就 NR",
+ traps:["SE 當 SD 用——效應高估、CI 過窄，審稿人一眼看出","不同量表直接用 MD 合併（要用 SMD）","同一篇兩個時間點抄進同一列","方向沒統一（分數越高越好 vs 越低越好）"],
+ check:["每個數值都有 source","所有 SD 都是 SD，不是 SE 或 CI","單位與時間點已對齊","higher_is_better 欄已填"],
+ q:"原文給 mean (SE)，n = 41，SE = 3.1。SD 是多少？",a:"SD = SE × √n = 3.1 × √41 ≈ 19.9。所以表格裡 reported_as 寫 mean_se，由第 7 站腳本換算。",
+ motto:"沒有出處的數字，不存在。"},
+{n:"06",name:"偏倚風險",one:"問每篇：結果有多大機會是設計瑕疵造成的？",
+ why:"不是批評作者，是決定我們對合併結果能信幾分，第 8 站 GRADE 直接用。RCT 用 RoB 2（5 個 domain），非隨機介入用 ROBINS-I（7 個），觀察性用 NOS。",
+ ai:["依研究設計選工具","每個 domain 給判定 + 理由 + 全文出處","整理成 rob.csv"],
+ you:["獨立評一次，不一致處討論","分清「沒報告」與「沒做」：沒報告通常是 Some concerns，不是 High","主觀 outcome 在 domain 4 的標準要比客觀 outcome 嚴"],
+ files:["rob.csv","rob_log.md"],cmd:"# 模板：rob2_template.csv / robins_i_template.csv / nos_template.csv",
+ traps:["把「有沒有雙盲」當唯一標準——手術研究重點在評估者盲化","每篇都判 Some concerns 求安全——第 8 站就沒辦法降級","NOS 星數直接加總當品質分數"],
+ check:["每個 domain 都有理由與頁碼","「未報告」與「未執行」分開判","整體判定邏輯正確（任一 High → High）","兩位評讀者不一致已記錄"],
+ q:"手部 ROM 由知道分組的治療師測量，這是 RoB 2 哪個 domain 的問題？",a:"Domain 4（結果測量）。評估者未盲化且 outcome 可被主觀影響，通常判 High。",
+ motto:"沒報告，不等於沒做。"},
+{n:"07",name:"統計分析",one:"一個數字、一張圖，再誠實地說能信幾分",
+ why:"統計本身三分鐘跑完。真正花時間的是事前的決定（模型、亞組、時間點）和事後的解讀——這兩件事不能外包。臨床研究幾乎都用隨機效應，固定效應當敏感度。",
+ ai:["跑 meta_analysis.R（或 .py）：合併效應、I²、τ²、預測區間","森林圖、漏斗圖、leave-one-out、亞組、Egger（k≥10）","對需換算的 SD 與方向發出警告"],
+ you:["確認模型與亞組跟 protocol 一致，偏離要寫理由","解讀：CI 寬度跟臨床意義（MCID）的關係","I² 高不是失敗，是線索——去亞組和敏感度找原因"],
+ files:["results/summary.txt","results/forest.png","results/funnel.png","results/interpretation.md"],cmd:"python meta_analysis.py --outcomes ../05_extraction/extraction_outcomes.csv --outcome TAM --timepoint 12w --measure MD --out results/\n# 先用 demo_data.csv 跑一次，熟悉輸出長什麼樣子",
+ traps:["同一篇兩個時間點放進同一張森林圖——同一群病人算兩次","多臂試驗對照組重複使用","< 10 篇就做 Egger 下結論","固定效應顯著、隨機效應不顯著，只報固定——這叫 p-hacking"],
+ check:["腳本的 SD 換算警告都確認過","森林圖抽查三篇數字與 extraction 表吻合","模型與亞組與 protocol 一致","已寫 interpretation.md：效應、異質性、可信度三段"],
+ q:"隨機效應模型下，τ² 變大會發生什麼事？",a:"權重 1/(vᵢ + τ²) 會變得更平均——小研究的發言權變大，合併效應往各研究的簡單平均靠近，CI 變寬。",
+ motto:"I² 高不是失敗，是線索。"},
+{n:"08",name:"GRADE",one:"這個數字，我們敢信幾分？",
+ why:"RCT 從 High 起跳，觀察性從 Low 起跳，然後看五個降級理由：偏倚、不一致、間接、不精確、發表偏倚。每個 outcome 各評一次，輸出 Summary of Findings 表。",
+ ai:["對每個 outcome 逐一評五個面向","把各站數字（rob.csv、I²、CI、funnel）對應到理由","產出 grade_sof.csv 草稿"],
+ you:["理由寫得清楚比等級本身重要","不精確要考慮 MCID，不只看 p 值","外科 SR 最常該降卻沒降的是「間接性」"],
+ files:["grade_sof.csv"],cmd:"# grade_sof_template.csv 裡有一列填好的範例",
+ traps:["每個面向都降一級，最後全 Very low——等於沒評","只用 I² 判不一致——篇數少時要看森林圖 CI 重疊","忘了間接性（全是 zone V，我們問 IV–VI）"],
+ check:["每個主要 outcome 一列","每次降級有具體理由並引用哪一站的數字","起點正確（RCT High / 觀察 Low）","沒有為了結論好看手下留情"],
+ q:"總樣本 372 人，CI 是 8.2 到 15.8 度，MCID 是 5 度。不精確要降級嗎？",a:"通常不降：CI 整段都在 MCID 之上，臨床結論不會因 CI 兩端而改變。若 CI 跨過 5 度，就要降。",
+ motto:"理由寫清楚，比等級重要。"},
+{n:"09",name:"稿件",one:"前八站組裝成 PRISMA 2020 稿件",
+ why:"Methods 是 protocol 的過去式，Results 是第 3–8 站的數字排列——幾乎已經寫好。真正要從零寫的只有 Introduction 的論證和 Discussion 的臨床判斷，那是你的。",
+ ai:["prisma_flow.py 畫流程圖並驗算數字（對不上不出圖）","依模板填 Methods 與 Results，每個數字後註出處","給 Discussion 骨架與可能論點"],
+ you:["寫 Discussion：臨床意義、與文獻比較、限制（要誠實）","填 PRISMA checklist 27 項頁碼","摘要數字與正文一致（最常出錯）","揭露 AI 使用"],
+ files:["manuscript.md","prisma_flow.svg","prisma_checklist.md"],cmd:"python prisma_flow.py --db \"PubMed=412\" --db \"Embase=388\" --other 6 --dedup 523 --screened-out 471 --fulltext 52 --excl \"wrong_population=12\" --excl \"wrong_design=9\" --included 31 --out prisma_flow.svg",
+ traps:["摘要寫「顯著改善」但正文 CI 貼 0","限制段三行帶過","PROSPERO 編號沒放進摘要","圖檔解析度不到 300 dpi"],
+ check:["流程圖數字自洽","Methods 與 protocol 一致，偏離有說明","每個數字對得到某一站的某個檔案","AI 使用已揭露"],
+ q:"去重後 523、初篩排除 471、全文評估 52、排除 43。納入幾篇？流程圖哪裡會出錯？",a:"納入 9 篇。523 − 471 = 52 ✓；52 − 43 = 9 ✓。若你把一篇寫了兩個排除理由，排除數會變 44，腳本就會拒絕出圖。",
+ motto:"每個數字都要能回到它出生的那一站。"}
+];
+
+const LINES=["離 impact factor 又近了一站。","這一站的苦工，審稿人看不到，但看得到你沒做。","好的 meta-analysis 不是把數字加起來，是把判斷寫下來。","今天的閘門，明天的 Methods 段落。","Cochrane 之神在看，祂點了頭。","你剛剛做的事，叫做 reproducibility。","蓋章的手不抖，森林圖才不會歪。","每一次簽核，都是替未來的自己省一次 revision。","資料不會說謊，但會沉默；你剛剛讓它開口了。"];
+
+const KEY="meta-line-stamps";
+let state={};
+try{state=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){state={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function render(){
+  const belt=document.getElementById("belt");
+  belt.innerHTML=STATIONS.map((s,i)=>`<a class="stop ${state[s.n]?"done":""}" href="#s${s.n}"><span class="n">${state[s.n]?"✓":s.n}</span><span class="t">${s.name}</span></a>${i<8?'<span class="chev">›</span>':""}`).join("");
+  const root=document.getElementById("stations");
+  root.innerHTML=STATIONS.map((s,i)=>{
+    const prevOk=i===0||!!state[STATIONS[i-1].n];
+    const done=!!state[s.n];
+    return `<section class="station ${done?"done":""}" id="s${s.n}">
+      ${done?`<div class="stamp">APPROVED ${s.n}</div>`:""}
+      <div class="st-head"><div class="st-num">${s.n}</div><div class="st-title"><h2>${s.name}</h2><p class="one">${s.one}</p></div></div>
+      <p class="why">${s.why}</p>
+      <div class="two">
+        <div class="col ai"><span class="eyebrow">AI 自動化做什麼</span><ul>${s.ai.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+        <div class="col you"><span class="eyebrow">你要判斷什麼</span><ul>${s.you.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+      </div>
+      <div><span class="eyebrow">產出檔案</span><div class="files">${s.files.map(f=>`<code>${f}</code>`).join("")}</div></div>
+      <div><span class="eyebrow">指令</span><pre><code>${esc(s.cmd)}</code></pre></div>
+      <div><span class="eyebrow">常見踩雷</span><ul class="traps">${s.traps.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+      <details class="quiz"><summary>${s.q}</summary><p>${s.a}</p></details>
+      <p class="motto">${s.motto}</p>
+      <div class="check"><span class="eyebrow">簽核標準</span>${s.check.map((c,j)=>`<label><input type="checkbox" id="c${s.n}-${j}" data-st="${s.n}" data-i="${j}" ${state["c"+s.n+"-"+j]?"checked":""}>${c}</label>`).join("")}</div>
+      <div class="gate">
+        ${done?`<span class="stamp-line">✓ 已蓋章 · ${state[s.n]}</span><button class="reset" data-undo="${s.n}" type="button">撤章</button>`:
+          `<button class="stamp-btn" data-stamp="${s.n}" type="button" ${prevOk?"":"disabled"}>蓋章放行</button><span class="gate-hint">${prevOk?"勾完上面的標準再蓋。":"前一站還沒蓋章，不能跳站。"}</span>`}
+        <span class="gate-cmd">正式版：python gate.py approve &lt;題目&gt; ${s.n} --by 你</span>
+      </div>
+    </section>`;
+  }).join("");
+  const n=STATIONS.filter(s=>state[s.n]).length;
+  document.getElementById("count").textContent=n;
+  document.getElementById("finale").classList.toggle("show",n===9);
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-stamp]");
+  if(b){const n=b.dataset.stamp;state[n]=LINES[Math.floor(Math.random()*LINES.length)];save();render();
+    const el=document.getElementById("s"+n);if(el)el.scrollIntoView({block:"start"});return}
+  const u=e.target.closest("[data-undo]");
+  if(u){const idx=STATIONS.findIndex(s=>s.n===u.dataset.undo);
+    STATIONS.slice(idx).forEach(s=>delete state[s.n]);save();render();return}
+  if(e.target.id==="reset"){state={};save();render()}
+});
+document.addEventListener("change",e=>{
+  const c=e.target;if(c.matches("input[type=checkbox][data-st]")){state["c"+c.dataset.st+"-"+c.dataset.i]=c.checked;save()}
+});
+render();
+if(location.hash){const el=document.querySelector(location.hash);if(el)el.scrollIntoView()}
+</script>
+</body>
+</html>

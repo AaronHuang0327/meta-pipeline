@@ -1,0 +1,16 @@
+# 每個題目的工作區：含付費全文 PDF 與未發表資料，不進 repo
+projects/*
+!projects/.gitkeep
+
+# 分析輸出與暫存
+results/
+results_demo/
+duplicates_removed.csv
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+
+# 系統檔
+.DS_Store
+Thumbs.db

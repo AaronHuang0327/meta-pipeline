@@ -1,0 +1,11 @@
+id,first_author,year,design,outcome,timepoint,type,n_int,mean_int,sd_int,n_ctl,mean_ctl,sd_ctl,events_int,events_ctl,reported_as,source,quote,needs_conversion,higher_is_better
+R0001,Demo A,2015,RCT,TAM,12w,continuous,30,232,18,30,221,22,,,mean_sd,Table 2 p.5,"TAM 232 (18) vs 221 (22)",no,yes
+R0002,Demo B,2017,RCT,TAM,12w,continuous,24,240,15,26,226,19,,,mean_sd,Table 3 p.6,"",no,yes
+R0003,Demo C,2018,cohort,TAM,12w,continuous,41,228,3.1,39,218,3.4,,,mean_se,Table 2 p.4,"mean (SE)",yes,yes
+R0004,Demo D,2020,RCT,TAM,12w,continuous,20,235,20,20,230,24,,,mean_sd,Fig 2 p.7,"",no,yes
+R0005,Demo E,2021,cohort,TAM,12w,continuous,55,238,16,52,222,18,,,mean_sd,Table 4 p.8,"",no,yes
+R0006,Demo F,2022,RCT,TAM,12w,continuous,18,229,21,17,225,19,,,mean_sd,Table 2 p.5,"",no,yes
+R0001,Demo A,2015,RCT,Rupture,12w,binary,30,,,30,,,1,2,count,Table 2 p.5,"",no,no
+R0002,Demo B,2017,RCT,Rupture,12w,binary,24,,,26,,,0,1,count,Table 3 p.6,"",no,no
+R0004,Demo D,2020,RCT,Rupture,12w,binary,20,,,20,,,1,1,count,Table 2 p.7,"",no,no
+R0005,Demo E,2021,cohort,Rupture,12w,binary,55,,,52,,,2,3,count,Table 4 p.8,"",no,no
