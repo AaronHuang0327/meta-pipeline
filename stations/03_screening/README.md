@@ -43,6 +43,17 @@ python adjudicate.py screen_A.csv screen_B.csv --llm screen_LLM.csv --out screen
 #    qa_flag = yes 的列 → A、B 各自回頭看一眼；改變決定要在 reason 寫明
 ```
 
+## 無痛版：用篩選 App，學弟不碰 CSV
+
+`tools/screening_app/` 是一個網頁 App（已發布為 Claude artifact「篩選站」）。流程：
+
+1. 通訊作者請 Claude 跑 `make_seed.py`，把 `records_dedup.csv`（可加 `screen_LLM.csv` 做排序）灌進 App 的資料庫。
+2. 把 App 連結分享給兩位審查者（分享權限要是 **Contributor**，不然存不進去）。
+3. 審查者打開連結、選自己的名字，一篇一篇按「納入／不確定／排除」，排除要選理由。可以用手機，中途離開會記得進度。
+4. 兩人都按完後，請 Claude 從 App 資料庫讀出 decisions，跑 `pull_decisions.py` 轉成 `screen_A.csv`、`screen_B.csv`，再跑 `adjudicate.py`。
+
+同一個 App 把 stage 換成 `ft` 就是第 4 站的全文資格判定。
+
 ## 篩選原則（教學弟妹的話）
 
 * 標題摘要階段**只排除「明確不符」**的，有疑慮一律放行到全文階段。這階段寧可多留。

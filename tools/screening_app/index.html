@@ -1,0 +1,215 @@
+<title>篩選站</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版面概念：一次一張卡，像翻病歷。陽光黃底、白卡、三顆大按鈕，拇指可達。單一陽光主題。 */
+:root{
+  --bg:#FFD84A;--bg-deep:#FFC226;--card:#FFFFFF;--fg:#2B2418;--muted:#7A6B45;
+  --accent:#FF6B3D;--accent-2:#3BA6A0;--ok:#3E9B5B;--warn:#E0A100;--line:#F0D060;--soft:#FFF3C4;
+  --display:"Fredoka","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 24px}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
+h1,h2{font-family:var(--display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:1.5rem}
+p{margin:0}
+button{font-family:var(--body);cursor:pointer;border:0;border-radius:12px;font-size:1rem}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.top .who{font-size:.9rem;color:var(--muted)}
+.top .who b{color:var(--fg)}
+.pill{background:var(--card);border-radius:999px;padding:4px 12px;font-size:.85rem;font-family:var(--display);font-weight:600}
+.bar{height:10px;background:var(--bg-deep);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.card{background:var(--card);border-radius:20px;padding:20px clamp(16px,4vw,26px);display:grid;gap:12px;box-shadow:0 10px 30px -20px rgba(80,50,0,.5)}
+.meta{font-size:.82rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.meta code{background:var(--soft);padding:.05em .5em;border-radius:6px;font-size:.8rem}
+.title{font-size:1.15rem;font-weight:700;line-height:1.4}
+.abs{font-size:.95rem;max-height:40vh;overflow:auto;padding-right:4px;white-space:pre-wrap}
+.abs.empty{color:var(--muted);font-style:italic}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.actions button{padding:14px 8px;font-weight:700;font-size:1.05rem;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .06s,box-shadow .06s}
+.actions button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.actions button small{display:block;font-weight:400;font-size:.72rem;opacity:.9}
+.b-in{background:var(--ok)}.b-out{background:var(--accent)}.b-unsure{background:var(--warn)}
+.actions button.chosen{outline:4px solid var(--fg);outline-offset:-4px}
+.sub{display:grid;gap:8px;padding:12px;border-radius:14px;background:var(--soft)}
+.sub label{font-size:.85rem;color:var(--muted)}
+select,textarea{width:100%;font-family:var(--body);font-size:.95rem;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;color:var(--fg)}
+textarea{min-height:52px;resize:vertical}
+.conf{display:flex;gap:6px}
+.conf button{flex:1;padding:6px;background:#fff;border:1px solid var(--line);font-size:.85rem}
+.conf button.on{background:var(--fg);color:#fff;border-color:var(--fg)}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.nav button{background:var(--card);padding:8px 14px;font-size:.9rem}
+.nav .save{background:var(--fg);color:#fff;font-weight:700}
+.nav .save:disabled{opacity:.4;cursor:not-allowed}
+details.pico{background:var(--card);border-radius:14px;padding:10px 16px;font-size:.9rem}
+details.pico summary{cursor:pointer;font-weight:700;font-family:var(--display)}
+details.pico pre{white-space:pre-wrap;font-family:var(--body);margin:8px 0 0;color:var(--muted)}
+.gate{background:var(--card);border-radius:20px;padding:24px;display:grid;gap:14px;text-align:center}
+.gate .names{display:grid;gap:8px}
+.gate .names button{padding:14px;background:var(--soft);font-weight:700;font-size:1.05rem}
+.gate .names button:hover{background:var(--bg-deep)}
+.note{font-size:.85rem;color:var(--muted)}
+.done{background:var(--ok);color:#fff;border-radius:20px;padding:24px;text-align:center;font-family:var(--display);font-size:1.3rem;display:grid;gap:8px}
+.done small{font-family:var(--body);font-size:.9rem;opacity:.95}
+.list{background:var(--card);border-radius:16px;padding:8px 0;max-height:50vh;overflow:auto}
+.list button{display:grid;grid-template-columns:52px 1fr auto;gap:8px;width:100%;text-align:left;padding:8px 14px;background:none;border-radius:0;font-size:.85rem;align-items:center;border-bottom:1px solid var(--soft)}
+.list button:hover{background:var(--soft)}
+.list .d{font-family:var(--display);font-weight:600;font-size:.75rem;padding:2px 8px;border-radius:999px;color:#fff}
+.d.include{background:var(--ok)}.d.exclude{background:var(--accent)}.d.unsure{background:var(--warn)}.d.none{background:var(--line);color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#fff;padding:8px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.kbd{font-size:.78rem;color:var(--muted);text-align:center}
+.kbd kbd{background:var(--card);padding:1px 6px;border-radius:5px;border:1px solid var(--line);font-family:inherit}
+@media(max-width:480px){.kbd{display:none}.actions button{font-size:.95rem}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="app">
+  <div class="card"><p class="note">載入中…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(async function(){
+  const $=s=>document.querySelector(s);
+  const app=$("#app");
+  const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  let toastT;const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600)};
+  const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+  const DEFAULT_REASONS=["wrong_population 錯族群","wrong_intervention 錯介入","wrong_comparator 錯對照","wrong_design 錯設計（病例報告／回顧文章）","not_primary 非原始研究","language 語言不符","duplicate 重複發表","other 其他（請寫備註）"];
+
+  const db=await claude.use("db");
+  if(!db){app.innerHTML=`<div class="card"><h1>篩選站</h1><p>這一頁需要登入 claude.ai 並且被加為 Contributor 才能使用。請把這個連結交給通訊作者確認分享權限。</p></div>`;return}
+  const userCap=await claude.use("user");
+  const canWrite=userCap?await userCap.can("data.write"):null;
+
+  // ---- 讀設定與紀錄 ----
+  const cfgSnap=await db.doc("config/main").get();
+  if(!cfgSnap.exists){app.innerHTML=`<div class="card"><h1>篩選站</h1><p>還沒有載入任何題目。請通訊作者請 Claude 用 <code>make_seed.py</code> 把去重後的紀錄灌進來。</p></div>`;return}
+  const cfg=cfgSnap.data();
+  const stage=cfg.stage||"ta";
+  const reasons=(cfg.reasons&&cfg.reasons.length)?cfg.reasons:DEFAULT_REASONS;
+
+  async function loadAll(colName,orderField,filter){
+    const out=[];let last=null;
+    for(let i=0;i<30;i++){
+      let q=db.collection(colName).orderBy(orderField).limit(1000);
+      if(filter)q=q.where(filter[0],filter[1],filter[2]);
+      if(last!==null)q=q.where(orderField,">",last);
+      const s=await q.get();
+      s.docs.forEach(d=>out.push({_id:d.id,...d.data()}));
+      if(s.size<1000)break;
+      last=out[out.length-1][orderField];
+    }
+    return out;
+  }
+  const records=await loadAll("records","order");
+  if(!records.length){app.innerHTML=`<div class="card"><h1>${esc(cfg.project||"篩選站")}</h1><p>紀錄清單是空的。</p></div>`;return}
+
+  // ---- 選審查者 ----
+  let me=ls.get("screen-me-"+stage);
+  const reviewers=cfg.reviewers||["審查者 A","審查者 B"];
+  if(!me||!reviewers.includes(me)){await pickReviewer();}
+  function pickReviewer(){return new Promise(res=>{
+    app.innerHTML=`<div class="gate"><h1>${esc(cfg.project||"篩選站")}</h1>
+      <p>${stage==="ft"?"全文資格判定":"標題摘要篩選"} · 共 ${records.length} 筆</p>
+      <p class="note">你是哪一位？選了之後只會看到自己的判定，看不到對方的。篩完之前不要討論個別文獻。</p>
+      <div class="names">${reviewers.map(r=>`<button type="button" data-r="${esc(r)}">${esc(r)}</button>`).join("")}</div>
+      ${canWrite===false?`<p class="note" style="color:var(--accent)">你目前的分享權限是「檢視」，按了會存不進去。請通訊作者把你改成 Contributor。</p>`:""}
+    </div>`;
+    app.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{me=b.dataset.r;ls.set("screen-me-"+stage,me);res()});
+  })}
+
+  // ---- 我的判定 ----
+  // 文件 id 只能用 ASCII：審查者用索引、紀錄 id 做清洗
+  const myKey=id=>`${stage}__r${reviewers.indexOf(me)}__${String(id).replace(/[^A-Za-z0-9_\-.~:@+]/g,"_")}`;
+  let mine={};
+  async function loadMine(){
+    mine={};
+    const rows=await loadAll("decisions","order",["reviewer","==",me]);
+    rows.filter(r=>r.stage===stage).forEach(r=>mine[r.record_id]=r);
+  }
+  await loadMine();
+
+  // ---- 狀態 ----
+  let idx=Math.max(0,records.findIndex(r=>!mine[r.id]));
+  if(idx<0)idx=0;
+  let draft=null; // {decision, reason, confidence, note}
+  let view="card";
+
+  function counts(){const c={include:0,exclude:0,unsure:0};Object.values(mine).forEach(d=>c[d.decision]=(c[d.decision]||0)+1);return c}
+
+  function render(){
+    const r=records[idx];const done=Object.keys(mine).length;const c=counts();
+    const existing=mine[r.id];
+    if(draft===null)draft=existing?{decision:existing.decision,reason:existing.reason||"",confidence:existing.confidence||"high",note:existing.note||""}:{decision:"",reason:"",confidence:"high",note:""};
+    const allDone=done>=records.length;
+    const head=`<div class="top"><h1>${esc(cfg.project||"篩選站")}</h1><span class="who"><b>${esc(me)}</b> · <button type="button" id="switch" style="background:none;padding:0;color:var(--muted);text-decoration:underline;font-size:.85rem">換人</button></span></div>
+      <div class="top"><span class="pill">${done} / ${records.length}</span><span class="note">納入 ${c.include||0} · 排除 ${c.exclude||0} · 不確定 ${c.unsure||0}</span><button type="button" id="toggleList" style="background:var(--card);padding:4px 12px;font-size:.85rem">${view==="list"?"回到卡片":"清單"}</button></div>
+      <div class="bar"><i style="width:${(done/records.length*100).toFixed(1)}%"></i></div>`;
+    if(view==="list"){
+      app.innerHTML=head+`<div class="list">${records.map((x,i)=>{const d=mine[x.id];return `<button type="button" data-go="${i}"><span class="d ${d?d.decision:"none"}">${d?({include:"納入",exclude:"排除",unsure:"不確定"})[d.decision]:"未判"}</span><span>${esc(x.title)}</span><span class="note">${esc(x.year||"")}</span></button>`}).join("")}</div>
+        <p class="note">點任一篇可回去修改。</p>`;
+      app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{idx=+b.dataset.go;draft=null;view="card";render()});
+      $("#toggleList").onclick=()=>{view="card";render()};$("#switch").onclick=switchUser;return;
+    }
+    const doneBlock=allDone&&!existing?"":"";
+    app.innerHTML=head+(allDone?`<div class="done">全部看完了 🌞<small>${esc(me)}，你的 ${records.length} 筆判定都已存好。通訊作者會跑比對，不一致的會再找你們討論。想修改任一篇，開「清單」。</small></div>`:"")+
+      `<details class="pico"><summary>納入條件（PICO）</summary><pre>${esc(cfg.pico||"（通訊作者尚未填入）")}</pre></details>
+      <div class="card">
+        <div class="meta"><code>${esc(r.id)}</code><span>${esc(r.year||"")}</span><span>${esc(r.journal||"")}</span><span>${esc((r.authors||"").split(";")[0]||"")}${(r.authors||"").includes(";")?" 等":""}</span></div>
+        <div class="title">${esc(r.title)}</div>
+        <div class="abs ${r.abstract?"":"empty"}">${r.abstract?esc(r.abstract):"（沒有摘要 — 依規則一律先納入，到全文階段再判）"}</div>
+        <div class="actions">
+          <button type="button" class="b-in ${draft.decision==="include"?"chosen":""}" data-d="include">納入<small>看全文再說</small></button>
+          <button type="button" class="b-unsure ${draft.decision==="unsure"?"chosen":""}" data-d="unsure">不確定<small>會算納入，標低信心</small></button>
+          <button type="button" class="b-out ${draft.decision==="exclude"?"chosen":""}" data-d="exclude">排除<small>明確不符</small></button>
+        </div>
+        ${draft.decision==="exclude"?`<div class="sub"><label for="reason">排除理由（必填）</label><select id="reason"><option value="">— 選一個 —</option>${reasons.map(x=>`<option ${draft.reason===x?"selected":""}>${esc(x)}</option>`).join("")}</select></div>`:""}
+        ${draft.decision?`<div class="sub"><label>信心度</label><div class="conf">${["high 高","medium 中","low 低"].map(x=>{const v=x.split(" ")[0];return `<button type="button" data-c="${v}" class="${draft.confidence===v?"on":""}">${x.split(" ")[1]}</button>`}).join("")}</div>
+          <label for="note">備註（選填，一句話）</label><textarea id="note">${esc(draft.note)}</textarea></div>`:""}
+        <div class="nav"><button type="button" id="prev" ${idx===0?"disabled":""}>‹ 上一篇</button>
+          <button type="button" class="save" id="save" ${draft.decision&&!(draft.decision==="exclude"&&!draft.reason)?"":"disabled"}>${existing?"更新並下一篇":"存檔並下一篇"} ›</button>
+          <button type="button" id="skip">先跳過</button></div>
+      </div>
+      <p class="kbd"><kbd>1</kbd> 納入 <kbd>2</kbd> 不確定 <kbd>3</kbd> 排除 <kbd>Enter</kbd> 存檔 <kbd>←</kbd><kbd>→</kbd> 翻頁</p>`;
+    app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{draft.decision=b.dataset.d;if(draft.decision!=="exclude")draft.reason="";if(draft.decision==="unsure")draft.confidence="low";render()});
+    app.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{draft.confidence=b.dataset.c;render()});
+    const rs=$("#reason");if(rs)rs.onchange=()=>{draft.reason=rs.value;render()};
+    const nt=$("#note");if(nt)nt.oninput=()=>{draft.note=nt.value};
+    $("#prev").onclick=()=>go(idx-1);$("#skip").onclick=()=>go(nextUndone(idx));$("#save").onclick=save;
+    $("#toggleList").onclick=()=>{view="list";render()};$("#switch").onclick=switchUser;
+  }
+  function nextUndone(from){for(let i=from+1;i<records.length;i++)if(!mine[records[i].id])return i;for(let i=0;i<records.length;i++)if(!mine[records[i].id])return i;return Math.min(from+1,records.length-1)}
+  function go(i){if(i<0||i>=records.length)return;idx=i;draft=null;render()}
+  async function switchUser(){ls.set("screen-me-"+stage,"");me=null;await pickReviewer();await loadMine();idx=Math.max(0,records.findIndex(r=>!mine[r.id]));draft=null;view="card";render()}
+  let saving=false;
+  async function save(){
+    if(saving)return;const r=records[idx];
+    if(!draft.decision||(draft.decision==="exclude"&&!draft.reason))return;
+    saving=true;
+    const body={stage,reviewer:me,record_id:r.id,order:r.order,decision:draft.decision,reason:draft.reason,confidence:draft.confidence,note:draft.note||"",time:new Date().toISOString()};
+    try{await db.doc("decisions/"+myKey(r.id)).set(body);mine[r.id]=body;toast("已存");go(nextUndone(idx));}
+    catch(e){toast(e&&e.code==="invalid_argument"?"存不進去：你的權限是檢視，請通訊作者改成 Contributor":"存檔失敗，再試一次");}
+    saving=false;
+  }
+  document.addEventListener("keydown",e=>{
+    if(view!=="card"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT")return;
+    if(e.key==="1"){draft.decision="include";draft.reason="";render()}
+    else if(e.key==="2"){draft.decision="unsure";draft.confidence="low";draft.reason="";render()}
+    else if(e.key==="3"){draft.decision="exclude";render();const s=$("#reason");if(s)s.focus()}
+    else if(e.key==="Enter"){save()}
+    else if(e.key==="ArrowLeft"){go(idx-1)}else if(e.key==="ArrowRight"){go(idx+1)}
+  });
+  render();
+})();
+</script>

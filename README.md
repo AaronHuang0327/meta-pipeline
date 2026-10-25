@@ -31,6 +31,10 @@
 | 08 | GRADE | 證據等級與 Summary of Findings 表 | 降級理由是否合理 | `grade_sof.csv` |
 | 09 | 稿件 | PRISMA 流程圖與 checklist、Methods/Results 初稿 | Discussion 的臨床觀點由你寫 | `manuscript.md`, `prisma_flow.svg` |
 
+## 無痛版給學弟妹
+
+`tools/screening_app/` 是篩選 App：審查者打開連結、選名字、按按鈕，不碰終端機與 CSV。擷取與偏倚評讀用 Google Sheets 由 Claude 填草稿、人核對。通訊作者只跟 Claude 對話，蓋章由 Claude 代跑、記你的名字。詳見 `tools/screening_app/README.md`。
+
 ## 快速開始
 
 ```bash
