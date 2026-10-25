@@ -62,18 +62,28 @@ def main():
     ap.add_argument("a", help="第一作者的篩選結果")
     ap.add_argument("b", help="第二作者的篩選結果")
     ap.add_argument("--llm", default=None, help="LLM 預篩結果（選用）")
+    ap.add_argument("--records", default="records_dedup.csv", help="待篩母清單；兩位審查者都必須涵蓋其中每一筆")
     ap.add_argument("--out", default="screening_decisions.csv")
     ap.add_argument("--by", default="")
     args = ap.parse_args()
 
     require_station("03")
     A, B, L = read(args.a), read(args.b), read(args.llm)
-    ids = sorted(set(A) | set(B))
+    # 完整性以「母清單」為準，不是 A∪B：兩人同時漏掉同一篇也要抓得到
+    if not Path(args.records).exists():
+        sys.exit(f"✗ 找不到母清單 {args.records}。請用 --records 指定 records_dedup.csv。")
+    with open(args.records, encoding="utf-8") as f:
+        ids = [r["id"].strip() for r in csv.DictReader(f)]
+    if not ids:
+        sys.exit("✗ 母清單是空的。")
     missing_a = [i for i in ids if i not in A]
     missing_b = [i for i in ids if i not in B]
+    extra = sorted((set(A) | set(B)) - set(ids))
     if missing_a or missing_b:
-        sys.exit(f"✗ 兩位審查者必須各自看完每一筆。A 缺 {len(missing_a)} 筆、B 缺 {len(missing_b)} 筆。"
+        sys.exit(f"✗ 兩位審查者必須各自看完母清單的每一筆（共 {len(ids)}）。A 缺 {len(missing_a)} 筆、B 缺 {len(missing_b)} 筆。"
                  f"（例如 {(missing_a + missing_b)[:5]}）")
+    if extra:
+        print(f"⚠ 篩選檔裡有 {len(extra)} 個母清單沒有的 id（例如 {extra[:5]}），會被忽略。")
 
     rows, pairs, n_third, n_qa = [], [], 0, 0
     for i in ids:

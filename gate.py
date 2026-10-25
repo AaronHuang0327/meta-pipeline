@@ -10,6 +10,7 @@ gate.py — 生產線的閘門管理員 + 留痕中心
   approve <題目> <站> --by --note 蓋章（檢查順序、必要輸出、輸出不是空模板；記錄輸出 sha256）
   reopen  <題目> <站> --by --note 撤章（該站與下游全部打回）
   log <題目> <站> --by --note     手動補一筆事件（例如「寄信問作者」）
+  check <題目> <站>               第 N 站能否開工（上游全部 ✓ 才行）；給 R 等非 Python 腳本呼叫
   events <題目>                  列出全部事件紀錄
 
 留痕的設計（教學重點）：
@@ -138,10 +139,28 @@ def template_hashes(code: str) -> set[str]:
 
 # ---------- 給各站腳本用的 API ----------
 
+def upstream_blocker(proj: Path, m: dict, code: str):
+    """
+    第 code 站能否開工／簽核？檢查它之前的「每一站」都處於 ✓（已簽核且輸出雜湊未變）。
+    回傳 None 表示放行；否則回傳一段說明為何被擋。
+    只看 status == approved 是不夠的：簽核後偷改上游檔案，status 仍是 approved，
+    所以這裡用 station_state() 重新比對雜湊。
+    """
+    idx = STATION_INDEX[code]
+    for c, name, _ in STATIONS[:idx]:
+        mark, note = station_state(proj, m, c)
+        if mark == "✓":
+            continue
+        if mark == "⚠":
+            return f"第 {c} 站「{name}」{note}：python gate.py reopen {proj.name} {c}"
+        return f"第 {c} 站「{name}」尚未簽核。先完成：python gate.py approve {proj.name} {c}"
+    return None
+
+
 def require_station(code: str, strict: bool = True):
     """
     第 N 站的腳本呼叫 require_station("N")：
-      * 若在題目工作區內：第 N-1 站必須已簽核，否則停止。
+      * 若在題目工作區內：第 1..N-1 站必須全部 ✓（簽核且未被改動），否則停止。
       * 若不在工作區（例如在 stations/ 跑 demo）：印警告後放行。
     """
     proj, m = find_project_from_cwd()
@@ -149,11 +168,9 @@ def require_station(code: str, strict: bool = True):
         if strict:
             print("⚠ 不在任何題目的工作區內（找不到 manifest.json），跳過閘門檢查。正式作業請在 projects/<題目>/ 底下執行。")
         return None
-    idx = STATION_INDEX[code]
-    if idx > 0:
-        prev = STATIONS[idx - 1][0]
-        if m["stations"][prev]["status"] != "approved":
-            sys.exit(f"✗ 第 {prev} 站尚未簽核，第 {code} 站不能開工。先完成：python gate.py approve {proj.name} {prev}")
+    why = upstream_blocker(proj, m, code)
+    if why:
+        sys.exit(f"✗ 第 {code} 站不能開工。{why}")
     return proj
 
 
@@ -278,10 +295,9 @@ def cmd_approve(args):
     idx = STATION_INDEX[code]
     _, name, outputs = STATIONS[idx]
 
-    if idx > 0:
-        prev = STATIONS[idx - 1][0]
-        if m["stations"][prev]["status"] != "approved":
-            sys.exit(f"第 {prev} 站還沒簽核，不能跳站。生產線的意義就是不跳站。")
+    why = upstream_blocker(proj, m, code)
+    if why:
+        sys.exit(f"不能簽核第 {code} 站。{why}\n生產線的意義就是不跳站、不帶著被改過的上游往下走。")
 
     folder = proj / folder_name(code)
     found, missing = resolve_outputs(folder, outputs)
@@ -325,6 +341,17 @@ def cmd_reopen(args):
     print(f"第 {code} 站及其之後所有站已重開。上游改了，下游一定要重跑——這不是懲罰，是誠實。")
 
 
+def cmd_check(args):
+    """給非 Python 腳本（R）用：第 N 站能否開工？能 → exit 0；不能 → 印原因、exit 1。"""
+    proj = project_path(args.name)
+    m = load_manifest(proj)
+    why = upstream_blocker(proj, m, args.station.zfill(2))
+    if why:
+        print(f"✗ 第 {args.station.zfill(2)} 站不能開工。{why}")
+        sys.exit(1)
+    print(f"✓ 第 {args.station.zfill(2)} 站可以開工。")
+
+
 def cmd_log(args):
     proj = project_path(args.name)
     m = load_manifest(proj)
@@ -349,7 +376,7 @@ def main():
     p = sub.add_parser("next"); p.add_argument("name"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("board"); p.set_defaults(fn=cmd_board)
     p = sub.add_parser("events"); p.add_argument("name"); p.set_defaults(fn=cmd_events)
-    for c, fn in (("approve", cmd_approve), ("reopen", cmd_reopen), ("log", cmd_log)):
+    for c, fn in (("approve", cmd_approve), ("reopen", cmd_reopen), ("log", cmd_log), ("check", cmd_check)):
         p = sub.add_parser(c)
         p.add_argument("name"); p.add_argument("station")
         p.add_argument("--by", default="reviewer"); p.add_argument("--note", default="")

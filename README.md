@@ -72,7 +72,7 @@ https://aaronhuang0327.github.io/meta-pipeline/
 
 ## 需要的工具
 
-* Python 3.9+（`pip install pandas requests`）
+* Python 3.9+，建議用虛擬環境避免套件版本衝突：`python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 * R 4.x 加 `meta`、`metafor`（第 7 站標準版；沒有 R 可先用 `meta_analysis.py` 備用版）
 * Claude（claude.ai 或 Claude Code）：負責 01、02 語法、03 篩選、05 擷取、06 評讀、09 寫作的「草稿」工作，依各站 README 的提示詞操作
 

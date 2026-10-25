@@ -30,6 +30,24 @@ opt <- OptionParser() |>
   add_option("--out", type = "character", default = "results/") |>
   parse_args()
 
+# ---------- 0. 閘門：在題目工作區內時，上游全部簽核且未被改動才准開工 ----------
+# 目錄結構：<root>/projects/<題目>/07_analysis/ ；root 是放 gate.py 的那層
+find_root <- function() {
+  p <- normalizePath(getwd())
+  for (i in 1:6) { if (file.exists(file.path(p, "gate.py"))) return(p); p <- dirname(p) }
+  NULL
+}
+root <- find_root()
+proj_dir <- dirname(normalizePath(getwd()))          # projects/<題目>
+in_project <- !is.null(root) && file.exists(file.path(proj_dir, "manifest.json")) &&
+  normalizePath(dirname(proj_dir)) == normalizePath(file.path(root, "projects"))
+if (in_project) {
+  rc <- system2("python3", c(file.path(root, "gate.py"), "check", basename(proj_dir), "07"))
+  if (rc != 0) stop("第 07 站不能開工：上游尚未簽核或已被改動（見上方訊息）。")
+} else {
+  message("⚠ 不在任何題目的工作區內，跳過閘門檢查。正式作業請在 projects/<題目>/07_analysis/ 底下執行。")
+}
+
 dir.create(opt$out, showWarnings = FALSE, recursive = TRUE)
 log_line <- function(...) cat(sprintf(...), "\n", file = file.path(opt$out, "summary.txt"), append = TRUE)
 file.create(file.path(opt$out, "summary.txt"))
@@ -137,13 +155,9 @@ if (!is.null(opt$subgroup)) {
 }
 
 # ---------- 8. 留痕：呼叫 gate.py 記錄這次分析 ----------
-gate <- NULL
-for (p in c(getwd(), dirname(getwd()), dirname(dirname(getwd())), dirname(dirname(dirname(getwd()))))) {
-  if (file.exists(file.path(p, "gate.py"))) { gate <- file.path(p, "gate.py"); break }
-}
-if (!is.null(gate) && file.exists(file.path(dirname(dirname(getwd())), "manifest.json"))) {
-  proj <- basename(dirname(getwd()))
-  note <- sprintf("meta_analysis.R %s@%s %s k=%d RE=%.3f I2=%.0f%%", opt$outcome, opt$timepoint %||% "all", opt$measure, nrow(d), m$TE.random, m$I2 * 100)
-  system2("python3", c(gate, "log", proj, "07", "--by", "meta_analysis.R", "--note", shQuote(note)))
+if (in_project) {
+  note <- sprintf("meta_analysis.R %s@%s %s k=%d RE=%.3f I2=%.0f%% out=%s", opt$outcome, opt$timepoint %||% "all",
+                  opt$measure, nrow(d), m$TE.random, m$I2 * 100, opt$out)
+  system2("python3", c(file.path(root, "gate.py"), "log", basename(proj_dir), "07", "--by", "meta_analysis.R", "--note", shQuote(note)))
 }
 cat("完成。請閱讀", file.path(opt$out, "summary.txt"), "並撰寫 interpretation.md。\n")
